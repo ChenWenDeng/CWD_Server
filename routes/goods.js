@@ -19,52 +19,170 @@ mongoose.connection.on("disconnected",function(){
 })
 
 router.get("/",function(req,res,next){
-    if(req.param("keyWord")){
-        let keyWord = req.param("keyWord")
-        const reg = new RegExp(keyWord, 'i') 
+
+
+    //如果接收到的参数是 全部商品
+    if(req.param("keyWord")=='全部商品'){
+        //保存接收到的参数
+        let keyWord = req.param("keyWord")                  //保存输入搜索的文字
+        let sort = req.param("sort");                       //保存的排序--升序-降序
+        let pageSize = parseInt(req.param("pageSize"));     //保存渲染的数据的条数
+        let page = parseInt(req.param("page"));             //保存点击的分页数
+        let skip = (page - 1) * pageSize;                   //当前点击的页数减第一页乘要显示的条数
+
         console.log(keyWord)
+        console.log(sort)
+        console.log(pageSize)
+        console.log(page) 
+
+        //如果接收到的参数有sort
+        if(req.param("sort")){
+            console.log('查询数据库中所有数据，并进行排序')
+            //查询所有的进行排序
+            Goods.find({}).skip(skip).limit(pageSize).sort({'salePrice':sort}).exec(
+                function(err,docc){
+                    if(err){
+                        res.json({
+                            status:'1',
+                            msg:err.message
+                        })
+                    }else{
+                        res.json({
+                            status: '0',
+                            msg: '',
+                            result:{
+                                count:docc.length,
+                                list:docc
+                            }
+                        })
+                    }
+                }
+            )
+        }else{
+        console.log('查询数据库中所有数据，不需要排序')
+            Goods.find({}).skip(skip).limit(pageSize).exec(
+                function(err,docc){
+                    if(err){
+                        res.json({
+                            status:'1',
+                            msg:err.message
+                        })
+                    }else{
+                        res.json({
+                            status: '0',
+                            msg: '',
+                            result:{
+                                count:docc.length,
+                                list:docc
+                            }
+                        })
+                    }
+                }
+            )
+        }
+    }//接收到的排序参数sort==1或==-1
+    else if(req.param("sort")==1||req.param("sort")==-1){   
+        let sort = req.param("sort");
+        let pageSize = parseInt(req.param("pageSize"));
+        let page = parseInt(req.param("page"));
+        let skip = (page - 1) * pageSize;
+        let keyWord = req.param("keyWord")
+        const reg = new RegExp(keyWord, 'i')
+        console.log(keyWord)
+        console.log(sort)
+        console.log(pageSize)
+        console.log(page) 
+        console.log('接收到排序参数sort进行排序')
         Goods.find({
+            //多条件查询，查询productName是否包含接收到关键字 或 typeName是否包含接收到关键字
             $or:[
                 {productName : {$regex : reg}},
                 {typeName : {$regex : reg}},
             ]
-        },function(err,docc){
-            if(err){
-                res.json({
-                    status:'1',
-                    msg:err.message
-                })
-            }else{
-                res.json({
-                    status: '0',
-                    msg: '',
-                    result:{
-                        count:docc.length,
-                        list:docc
-                    }
-                })
+        }).skip(skip).limit(pageSize).sort({'salePrice':sort}).exec(
+            function(err,docc){
+                if(err){
+                    res.json({
+                        status:'1',
+                        msg:err.message
+                    })
+                }else{
+                    res.json({
+                        status: '0',
+                        msg: '',
+                        result:{
+                            count:docc.length,
+                            list:docc
+                        }
+                    })
+                }
             }
-        })
-        // Goods.find({"productName":{$regex : reg}},function(err,docc){
-        //     if(err){
-        //         res.json({
-        //             status:'1',
-        //             msg:err.message
-        //         })
-        //     }else{
-        //         res.json({
-        //             status: '0',
-        //             msg: '',
-        //             result:{
-        //                 count:docc.length,
-        //                 list:docc
-        //             }
-        //         })
-        //     }
-        // })
-    }else if(req.param("detailsId")){
+        )
+    }//如果接收到需要搜索关键字
+    else if(req.param("keyWord")){
+        //如果接收到paes参数   当前页数字
+        if(req.param("page")){
+            let pageSize = parseInt(req.param("pageSize"));
+            let page = parseInt(req.param("page"));
+            let skip = (page - 1) * pageSize;
+            let keyWord = req.param("keyWord")
+            const reg = new RegExp(keyWord, 'i')
+            console.log('关键字查询完后进行分页')
+            Goods.find({
+                $or:[
+                    {productName : {$regex : reg}},
+                    {typeName : {$regex : reg}},
+                ]
+            }).skip(skip).limit(pageSize).exec(  //关键字查询完后进行分页
+                function(err,docc){
+                    if(err){
+                        res.json({
+                            status:'1',
+                            msg:err.message
+                        })
+                    }else{
+                        res.json({
+                            status: '0',
+                            msg: '',
+                            result:{
+                                count:docc.length,
+                                list:docc
+                            }
+                        })
+                    }
+                }
+            )
+        }else{
+            let keyWord = req.param("keyWord")
+            const reg = new RegExp(keyWord, 'i') 
+            console.log(keyWord)
+            console.log('接收到关键字查询数据，不需要分页')
+            Goods.find({
+                $or:[
+                    {productName : {$regex : reg}},    //关键字查询不需要分页
+                    {typeName : {$regex : reg}},
+                ]
+            },function(err,docc){
+                if(err){
+                    res.json({
+                        status:'1',
+                        msg:err.message
+                    })
+                }else{
+                    res.json({
+                        status: '0',
+                        msg: '',
+                        result:{
+                            count:docc.length,
+                            list:docc
+                        }
+                    })
+                }
+            })
+        }
+    }else if(req.param("detailsId")){  //接收到数据的id号,进行查询  详情页
         let detailsId = parseInt(req.param("detailsId"))
-        console.log(detailsId)
+        console.log('查询数据id 对应的详情页')
         Goods.find({'productId':detailsId},function(err,docc){
             if(err){
                 res.json({
@@ -83,9 +201,7 @@ router.get("/",function(req,res,next){
             }
         })
     }else{
-    // let detailsId = parseInt(req.param("detailsId"))
-    // console.log(detailsId)
-    // Goods.find({},{'productId':detailsId});
+    console.log('没有参数，，返回所有的数据');        //没有参数，，返回所有的数据
     Goods.find({},function(err,docc){
         if(err){
             res.json({
