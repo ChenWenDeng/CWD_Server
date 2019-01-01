@@ -222,4 +222,93 @@ router.get("/",function(req,res,next){
     }
 })
 
+router.post("/addCart",function(req,res,next){
+    var productId = req.body.productId;
+    var productNum = req.body.num;
+    console.log('productNum:'+productNum);
+    console.log('productId:'+productId);
+    var UserId = 100001;
+    var User = require('../models/user');
+
+    User.findOne({userId:UserId},function(err,userDoc){
+        if(err){
+            res.json({
+                status:'1',
+                msg:err.message
+            })
+        }else{
+            console.log('userDoc:'+userDoc);
+            if(userDoc){
+                let goodsItem = '';
+                userDoc.cartList.forEach(function(item){
+                    if(item.details[0].productId  == productId){
+                        goodsItem = item;
+                        if(productNum==1){
+                            item.details[0].num++;
+                        }else{
+                            item.details[0].num += productNum
+                        }
+                        console.log('item==========='+item)
+                    }
+                    console.log('itemssss==========='+item.details[0].num)
+                })
+                if(goodsItem){
+                    userDoc.save(function(err2,doc2){
+                        if(err2){
+                            res.json({
+                                status:'1',
+                                msg:err2.message
+                            })
+                        }else{
+                            res.json({
+                                status: '0',
+                                msg: '',
+                                result:{
+                                    count:doc2.length,
+                                    list:doc2
+                                }
+                            })
+                        } 
+                    })
+                }else{
+                    Goods.findOne(
+                        {
+                            "details.productId":productId
+                        },function(err1,doc){
+                        if(err1){
+                            res.json({
+                                status:'1',
+                                msg:err1.message
+                            })
+                        }else{
+                            if(doc){
+                                doc.details[0].checked = 1;
+                                console.log('doc======'+doc)
+                                userDoc.cartList.push(doc);
+                                userDoc.save(function(err2,doc2){
+                                    if(err2){
+                                        res.json({
+                                            status:'1',
+                                            msg:err2.message
+                                        })
+                                    }else{
+                                        res.json({
+                                            status: '0',
+                                            msg: '',
+                                            result:{
+                                                count:doc2.length,
+                                                list:doc2
+                                            }
+                                        })
+                                    } 
+                                })
+                            }
+                        }
+                    })
+                }
+            }
+        }
+    })
+})
+
 module.exports = router;
