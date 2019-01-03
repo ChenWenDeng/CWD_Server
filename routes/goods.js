@@ -18,7 +18,7 @@ mongoose.connection.on("disconnected",function(){
     console.log("数据库连接断开");
 })
 
-router.get("/",function(req,res,next){
+router.get("/list",function(req,res,next){
 
 
     //如果接收到的参数是 全部商品
@@ -283,6 +283,10 @@ router.post("/addCart",function(req,res,next){
                         }else{
                             if(doc){
                                 doc.details[0].checked = 1;
+                                //第一次添加到购物车的数量不是1的话，改成要添加的数量
+                                if(productNum != 1){
+                                    doc.details[0].num = productNum
+                                }
                                 console.log('doc======'+doc)
                                 userDoc.cartList.push(doc);
                                 userDoc.save(function(err2,doc2){
@@ -297,7 +301,8 @@ router.post("/addCart",function(req,res,next){
                                             msg: '',
                                             result:{
                                                 count:doc2.length,
-                                                list:doc2
+                                                list:doc2,
+                                                _id:doc._id
                                             }
                                         })
                                     } 

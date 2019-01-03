@@ -7,12 +7,6 @@ var userSchema = new mongoose.Schema({
     "orderList":Array,
     "cartList":[
         {
-            // "productId":Number,
-            // "productName":String,
-            // "salePrice":Number,
-            // "smImg":Array,
-            // "checked":String,
-            // "num":String
             "details":[
                 {
                     "productId":Number,
@@ -21,7 +15,7 @@ var userSchema = new mongoose.Schema({
                     "num":Number,
                     "smImg":Array,
                     "detailsImagebag":Array,
-                    "checked":Number,
+                    "checked":String,
                 }
             ]
         }
