@@ -20,7 +20,17 @@ var userSchema = new mongoose.Schema({
             ]
         }
     ],
-    "addressList":Array
+    "addressList":[
+        {
+            'addressId':Number,
+            'cityName':String,
+            'userName':String,
+            'streeName':String,
+            'postCode':String,
+            'tel': Number,
+            'isDefault':Boolean
+        }
+    ]
 })
 
 module.exports = mongoose.model('user',userSchema)

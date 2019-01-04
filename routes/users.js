@@ -185,8 +185,155 @@ router.post("/cartEdit", function (req, res, next) {
       }
     }
   })
-
-
 })
+
+//查询用户地址接口
+router.get('/addressList',function(req,res,next){
+  var userId = req.cookies.userId;
+  user.findOne({userId:userId},function(err,doc){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      res.json({
+        status: '0',
+        msg: '',
+        result: doc.addressList
+      })
+    }
+  })
+})
+
+//添加用户购物地址
+router.post('/addAddress', function (req, res, next) {
+  var userId    = req.cookies.userId;
+  var cityName  = req.body.cityName;
+  var streeName = req.body.streeName;
+  var userName  = req.body.userName;
+  var tel       = parseInt(req.body.tel);
+  var postCode  = req.body.postCode;
+  var addressId = 0;
+  var object    = {}
+  console.log('用户id==='+userId)
+  console.log('城市==='+cityName)
+  console.log('具体地址==='+streeName)
+  console.log('名字==='+userName)
+  console.log('电话==='+tel)
+  console.log('邮编==='+postCode)
+  user.findOne({userId:userId},function(err,userDoc){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      if(userDoc){
+        for (var i = 0; i < userDoc.addressList.length; i++) {
+          addressId = userDoc.addressList[i].addressId
+          console.log(addressId)
+        }
+        addressId++
+        object.addressId  = addressId
+        object.cityName   = cityName
+        object.streeName  = streeName
+        object.userName   = userName
+        object.tel        = tel
+        object.postCode   = postCode
+        object.isDefault  = false
+
+        userDoc.addressList.push(object);
+        userDoc.save(function(err2,doc2){
+          if(err2){
+              res.json({
+                  status:'1',
+                  msg:err2.message
+              })
+          }else{
+              res.json({
+                  status: '0',
+                  msg: '',
+                  result: doc2.length
+              })
+            } 
+        })
+      }
+    }
+  })
+})
+
+//修改收货地址信息
+router.post('/modifyAddress', function (req, res, next) {
+  var userId    = req.cookies.userId;
+  var cityName  = req.body.cityName;
+  var streeName = req.body.streeName;
+  var userName  = req.body.userName;
+  var tel       = parseInt(req.body.tel);
+  var postCode  = req.body.postCode;
+  var addressId = req.body.addressId;
+  console.log('用户id==='+userId)
+  console.log('城市==='+cityName)
+  console.log('具体地址==='+streeName)
+  console.log('名字==='+userName)
+  console.log('电话==='+tel)
+  console.log('邮编==='+postCode)
+  console.log('地址id===='+addressId)
+  user.update({"userId":userId,'addressList.addressId':addressId},{
+    "addressList.$.cityName" : cityName,
+    "addressList.$.streeName": streeName,
+    "addressList.$.userName" : userName,
+    "addressList.$.tel"      : tel,
+    "addressList.$.postCode" : postCode
+  },function(err,doc){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.message,
+        result:''
+      })
+    } else {
+      res.json({
+        status: '0',
+        msg: '',
+        result: 'suc'
+      })
+    }
+  })
+})
+
+//删除收货地址信息
+router.post('/delAddress', function (req, res, next) {
+  var userId    = req.cookies.userId;
+  var addressId = req.body.addressId;
+  console.log('用户id==='+userId)
+  console.log('地址id===='+addressId)
+  user.update({
+    'userId': userId
+  }, {
+    $pull: {
+      'addressList': {
+        'addressId': addressId
+      }
+    }
+  }, function (err, doc) {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    } else {
+      res.json({
+        status: '0',
+        msg: '',
+        result: 'suc'
+      })
+    }
+  })
+})
+
 
 module.exports = router;
