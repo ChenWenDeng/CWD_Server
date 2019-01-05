@@ -15,7 +15,9 @@ var productSchema = new Schema({
             "salePrice":Number,
             "num":Number,
             "smImg":Array,
-            "detailsImagebag":Array
+            "detailsImagebag":Array,
+            "isMode":Boolean,
+            "checked":String,
         }
     ]
 })

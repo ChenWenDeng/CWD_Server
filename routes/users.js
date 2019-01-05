@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var user = require('./../models/user');
+var Goods = require('../models/goods')
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -91,6 +92,7 @@ router.post("/checkLogin", function (req, res, next) {
   }
 })
 
+//获取购物车列表
 router.get('/cartList', function (req, res, next) {
   var userId = req.cookies.userId;
   console.log('成功进入')
@@ -148,12 +150,14 @@ router.post('/cartDel', function (req, res, next) {
 
 //修改商品数量
 router.post("/cartEdit", function (req, res, next) {
-  var userId = req.cookies.userId;
+  var userId    = req.cookies.userId;
   var productId = req.body.productId;
-  var num = req.body.num;
+  var num       = req.body.num;
+  var checked   = req.body.checked;
   console.log(userId)
   console.log(productId)
   console.log(num)
+  console.log(checked)
   user.findOne({ "userId": userId, 'cartList.details.productId': productId }, function (err, doc) {
     if (err) {
       res.json({
@@ -166,6 +170,7 @@ router.post("/cartEdit", function (req, res, next) {
         doc.cartList.forEach(function (item) {
           if (item.details[0].productId == productId) {
             item.details[0].num = num
+            item.details[0].checked = checked
           }
         })
         doc.save(function (err2, doc2) {
@@ -182,6 +187,217 @@ router.post("/cartEdit", function (req, res, next) {
             })
           }
         })
+      }
+    }
+  })
+})
+
+//购物车全选接口
+router.post('/editCheckAll', function (req, res, next) {
+  var userId = req.cookies.userId;
+  var checkAll = req.body.checkAll?'1':'0';
+  user.findOne({userId:userId},function(err,user){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    } else {
+      if(user){
+        user.cartList.forEach((item)=>{
+          item.details[0].checked = checkAll;
+        })
+        user.save(function(err1,doc){
+          if(err1){
+            res.json({
+              status: '1',
+              msg: err.massage,
+              result: ''
+            })
+          }else{
+            res.json({
+              status: '0',
+              msg: '',
+              result: 'suc'
+            })
+          }
+        })
+      }
+    }
+  })
+})
+
+//清空立即购买列表数据
+router.post('/delPurchaseList', function (req, res, next) {
+  var userId = req.cookies.userId;
+  var productId = req.body.productId;
+  console.log(userId)
+  console.log(productId)
+  console.log('进入删除购物车')
+  user.update({
+    userId: userId
+  }, {
+      $pull: {
+        'purchaseList': {
+          'productId': productId
+        }
+      }
+    }, function (err, doc) {
+      if (err) {
+        res.json({
+          status: '1',
+          msg: err.massage,
+          result: ''
+        })
+      } else {
+        res.json({
+          status: '0',
+          msg: '',
+          result: 'suc'
+        })
+      }
+    })
+})
+
+
+//立即购买
+router.post('/purchase',function(req,res,next){
+  var userId = req.cookies.userId;
+  var productId = req.body.productId;
+  var productNum = req.body.num;
+  console.log(productId)
+  console.log('购买')
+
+  user.findOne({userId:userId},function(err,userDoc){
+      if(err){
+          res.json({
+              status:'1',
+              msg:err.message
+          })
+      }else{
+          if(userDoc){
+            user.update({
+              userId: userId
+            }, {
+                $pull: {
+                  'purchaseList': {
+                    'productId': productId
+                  }
+                }
+              }, function (err, doc) {
+                if (err) {
+                  res.json({
+                    status: '1',
+                    msg: err.massage,
+                    result: ''
+                  })
+                } else {
+                  // res.json({
+                  //   status: '0',
+                  //   msg: '',
+                  //   result: 'suc'
+                  // })
+                }
+              })
+          }
+          if(userDoc){
+            let goodsItem = '';
+            userDoc.purchaseList.forEach(function(item){
+                if(item.details[0].productId  == productId){
+                    goodsItem = item;
+                    if(productNum==1){
+                        item.details[0].num++;
+                    }else{
+                        item.details[0].num += productNum
+                    }
+                    console.log('item==========='+item)
+                }
+                console.log('itemssss==========='+item.details[0].num)
+            })
+            if(goodsItem){
+                userDoc.save(function(err2,doc2){
+                    if(err2){
+                        res.json({
+                            status:'1',
+                            msg:err2.message
+                        })
+                    }else{
+                        res.json({
+                            status: '0',
+                            msg: '',
+                            result:{
+                                count:doc2.length,
+                                list:doc2
+                            }
+                        })
+                    } 
+                })
+            }else{
+                Goods.findOne(
+                    {
+                        "details.productId":productId
+                    },function(err1,doc){
+                    if(err1){
+                        res.json({
+                            status:'1',
+                            msg:err1.message
+                        })
+                    }else{
+                        if(doc){
+                            doc.details[0].checked = 1;
+                            //第一次添加到购物车的数量不是1的话，改成要添加的数量
+                            if(productNum != 1){
+                                doc.details[0].num = productNum
+                            }
+                            console.log('doc======'+doc)
+                            userDoc.purchaseList.push(doc);
+                            userDoc.save(function(err2,doc2){
+                                if(err2){
+                                    res.json({
+                                        status:'1',
+                                        msg:err2.message
+                                    })
+                                }else{
+                                    res.json({
+                                        status: '0',
+                                        msg: '',
+                                        result:{
+                                            count:doc2.length,
+                                            list:doc2,
+                                            _id:doc._id
+                                        }
+                                    })
+                                } 
+                            })
+                        }
+                    }
+                })
+            }
+          }
+      }
+  })
+})
+
+//获取立即购买列表
+router.get('/purchase', function (req, res, next) {
+  var userId = req.cookies.userId;
+  console.log('成功进入购买列表')
+  user.findOne({ userId: userId }, function (err, doc) {
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    } else {
+      if (doc) {
+        res.json({
+          status: '0',
+          msg: '',
+          result: doc.purchaseList
+        })
+        console.log(doc.purchaseList)
       }
     }
   })
@@ -335,5 +551,51 @@ router.post('/delAddress', function (req, res, next) {
   })
 })
 
+//设置默认地址接口
+router.post("/setDefault",function(req,res,next){
+  var userId = req.cookies.userId;
+  var addressId = req.body.addressId;
+  if(!addressId){
+    res.json({
+      status: '1',
+      msg: 'addressId is null',
+      result: ''
+    })
+  }else{
+    user.findOne({userId:userId},function(err,doc){
+      if (err) {
+        res.json({
+          status: '1',
+          msg: err.massage,
+          result: ''
+        })
+      } else {
+        var addressList = doc.addressList;
+        addressList.forEach((item)=>{
+          if(item.addressId ==  addressId){
+            item.isDefault = true;
+          }else{
+            item.isDefault = false;
+          }
+        });
+        doc.save(function(err1,doc1){
+          if (err1) {
+            res.json({
+              status: '1',
+              msg: err1.massage,
+              result: ''
+            })
+          } else {
+            res.json({
+              status: '0',
+              msg: '',
+              result: 'suc'
+            })
+          }
+        })
+      }
+    })
+  }
+})
 
 module.exports = router;

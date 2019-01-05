@@ -16,6 +16,23 @@ var userSchema = new mongoose.Schema({
                     "smImg":Array,
                     "detailsImagebag":Array,
                     "checked":String,
+                    "isMode":Boolean,
+                }
+            ]
+        }
+    ],
+    "purchaseList":[
+        {
+            "details":[
+                {
+                    "productId":Number,
+                    "productName":String,
+                    "salePrice":Number,
+                    "num":Number,
+                    "smImg":Array,
+                    "detailsImagebag":Array,
+                    "checked":String,
+                    "isMode":Boolean,
                 }
             ]
         }
