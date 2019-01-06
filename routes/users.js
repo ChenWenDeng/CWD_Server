@@ -76,8 +76,10 @@ router.post("/logout", function (req, res, next) {
   })
 })
 
-router.post("/checkLogin", function (req, res, next) {
+router.get("/checkLogin", function (req, res, next) {
+  console.log('成功进入checkLogin')
   if (req.cookies.userId) {
+    console.log('成功进入checkLogin2')
     res.json({
       status: '0',
       msg: '',
@@ -226,6 +228,33 @@ router.post('/editCheckAll', function (req, res, next) {
       }
     }
   })
+})
+
+//购物车数量接口
+router.get("/getCartCount",function(req,res,next){
+  if(req.cookies && req.cookies.userId){
+    var userId = req.cookies.userId;
+    user.findOne({'userId':userId},function(err,doc){
+      if (err) {
+        res.json({
+          status: '1',
+          msg: err.massage,
+          result: ''
+        })
+      } else {
+        var cartList = doc.cartList;
+        let cartCount = 0;
+        cartList.map(function(item){
+          cartCount += parseInt(item.details[0].num);
+        })
+        res.json({
+          status: '0',
+          msg: '',
+          result: cartCount
+        })
+      }
+    })
+  }
 })
 
 //清空立即购买列表数据
