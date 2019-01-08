@@ -3,6 +3,8 @@ var userSchema = new mongoose.Schema({
     "userId":Number,
     "userName":String,
     "userPwd":String,
+    "phone":String,
+    "eliam":String,
     "confirmPwd":String,
     "orderList":Array,
     "cartList":[

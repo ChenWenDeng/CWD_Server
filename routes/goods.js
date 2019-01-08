@@ -223,14 +223,15 @@ router.get("/list",function(req,res,next){
 })
 
 router.post("/addCart",function(req,res,next){
-    var productId = req.body.productId;
+    var productId  = req.body.productId;
     var productNum = req.body.num;
+    var userId     = req.body.userId;
     console.log('productNum:'+productNum);
     console.log('productId:'+productId);
-    var UserId = 100001;
+    // var UserId = 100001;
     var User = require('../models/user');
 
-    User.findOne({userId:UserId},function(err,userDoc){
+    User.findOne({userId:userId},function(err,userDoc){
         if(err){
             res.json({
                 status:'1',

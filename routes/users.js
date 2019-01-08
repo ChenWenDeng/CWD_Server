@@ -9,16 +9,80 @@ router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
 
+//注册接口
+router.post("/register", function (req, res, next) {
+  var userName   = req.body.userName;
+  var userPwd    = req.body.userPwd;
+  var confirmPwd = req.body.confirmPwd;
+  var phone      = req.body.phone;
+  var eliam      = req.body.eliam;
+  console.log('userName=='+userName)
+  console.log('userPwd=='+userPwd)
+  console.log('confirmPwd=='+confirmPwd)
+  console.log('phone=='+phone)
+  console.log('eliam=='+eliam)
+  user.findOne({'userName':userName},function(err,userNameDoc){
+    if(err){
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+      console.log('err===='+'错误')
+    }else{
+      if(userNameDoc){
+        res.json({
+          status: '10020',
+          msg: '',
+          result: '用户名已存在'
+        })
+      }
+      else if(!userNameDoc){
+        user.find({},function(err2,userDoc){
+          if(userDoc){
+            console.log('进入===='+userDoc.length)
+            if(userDoc.length == 0){
+              var userId = 100001
+            }else{
+              for(var i=0;i<userDoc.length;i++){
+                if(i == userDoc.length-1){
+                  var userId = userDoc[i].userId
+                  console.log('www'+userDoc[i].userId);
+                }
+              }
+              userId++
+            }
+            let object = {
+              "userId":userId,
+              "userName":userName,
+              "userPwd":userPwd,
+              "confirmPwd":confirmPwd,
+              "phone":phone,
+              "eliam":eliam,
+              "orderList":[],
+              "cartList":[],
+              "purchaseList":[],
+              "addressList":[]
+            }
+            user.create(object)
+
+            res.json({
+              status: '0',
+              msg: '',
+              result: 'suc'
+            })
+          }
+        })
+      }
+    }
+  })
+})
+
 
 //登录接口
 router.post("/login", function (req, res, next) {
-  // var param = {
-  //   userName   : req.body.userName,
-  //   userPwd    : req.bosy.userPwd,
-  //   confirmPwd : req.body.confirmPwd
-  // }
-  var userName = req.body.userName;
-  var userPwd = req.body.userPwd;
+  var userName   = req.body.userName;
+  var userPwd    = req.body.userPwd;
   var confirmPwd = req.body.confirmPwd;
   console.log(userName)
   console.log(userPwd)
@@ -55,7 +119,8 @@ router.post("/login", function (req, res, next) {
           status: '0',
           msg: '',
           result: {
-            userName: doc.userName
+            userName: doc.userName,
+            userId: doc.userId
           }
         })
       }
@@ -76,6 +141,7 @@ router.post("/logout", function (req, res, next) {
   })
 })
 
+//登录后拿到用户名和id
 router.get("/checkLogin", function (req, res, next) {
   console.log('成功进入checkLogin')
   if (req.cookies.userId) {
@@ -83,7 +149,11 @@ router.get("/checkLogin", function (req, res, next) {
     res.json({
       status: '0',
       msg: '',
-      result: req.cookies.userName
+      // result: req.cookies.userName,
+      result:{
+        userId   : req.cookies.userId,
+        userName : req.cookies.userName
+      }
     })
   } else {
     res.json({
@@ -120,7 +190,7 @@ router.get('/cartList', function (req, res, next) {
 
 //购物车删除
 router.post('/cartDel', function (req, res, next) {
-  var userId = req.cookies.userId;
+  var userId  = req.cookies.userId;
   var cart_id = req.body.cart_id;
   console.log(userId)
   console.log(cart_id)
@@ -196,7 +266,7 @@ router.post("/cartEdit", function (req, res, next) {
 
 //购物车全选接口
 router.post('/editCheckAll', function (req, res, next) {
-  var userId = req.cookies.userId;
+  var userId   = req.cookies.userId;
   var checkAll = req.body.checkAll?'1':'0';
   user.findOne({userId:userId},function(err,user){
     if (err) {
@@ -259,7 +329,7 @@ router.get("/getCartCount",function(req,res,next){
 
 //清空立即购买列表数据
 router.post('/delPurchaseList', function (req, res, next) {
-  var userId = req.cookies.userId;
+  var userId    = req.cookies.userId;
   var productId = req.body.productId;
   console.log(userId)
   console.log(productId)
@@ -292,8 +362,8 @@ router.post('/delPurchaseList', function (req, res, next) {
 
 //立即购买
 router.post('/purchase',function(req,res,next){
-  var userId = req.cookies.userId;
-  var productId = req.body.productId;
+  var userId     = req.cookies.userId;
+  var productId  = req.body.productId;
   var productNum = req.body.num;
   console.log(productId)
   console.log('购买')
@@ -582,7 +652,7 @@ router.post('/delAddress', function (req, res, next) {
 
 //设置默认地址接口
 router.post("/setDefault",function(req,res,next){
-  var userId = req.cookies.userId;
+  var userId    = req.cookies.userId;
   var addressId = req.body.addressId;
   if(!addressId){
     res.json({
@@ -625,6 +695,15 @@ router.post("/setDefault",function(req,res,next){
       }
     })
   }
+})
+
+
+//个人中心   orders
+router.get("/orders",function(req,res,next){
+  var userId = req.cookies.userId;
+  user.findOne({userId:userId},function(err,doc){
+    console.log('doc========'+doc)
+  })
 })
 
 module.exports = router;
