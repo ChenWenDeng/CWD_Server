@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
+require('./../util/util');
+
 var user = require('./../models/user');
 var Goods = require('../models/goods')
 
@@ -558,7 +560,8 @@ router.post('/addAddress', function (req, res, next) {
         object.userName   = userName
         object.tel        = tel
         object.postCode   = postCode
-        object.isDefault  = false
+        // object.isDefault  = false
+        object.isDefault  = userDoc.addressList.length == 0 ? true : false
 
         userDoc.addressList.push(object);
         userDoc.save(function(err2,doc2){
@@ -698,6 +701,114 @@ router.post("/setDefault",function(req,res,next){
 })
 
 
+//生成订单
+router.post("/payMent",function(req,res,next){
+  var userId = req.cookies.userId;
+  var modes = req.body.modes;
+  var addressId = req.body.addressId;
+  console.log('modes==='+modes)
+  console.log('addressId==='+addressId)
+  user.findOne({'userId':userId},function(err,doc){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    }else{
+      if(doc){
+        if(modes=='cart'){
+          var goodsList = [];
+          doc.cartList.filter((item)=>{
+            // console.log(item.details[0].checked)
+            if(item.details[0].checked == '1'){
+              goodsList.push(item.details[0])
+              console.log(goodsList)
+            }
+          })
+        }
+
+        if(modes=='purchase'){
+          var goodsList = [];
+          //  console.log(doc.purchaseList[0].details[0])
+          goodsList.push(doc.purchaseList[0].details[0])
+           console.log(goodsList)
+        }
+
+        if(addressId == 0){
+          var address = ''
+          doc.addressList.filter((item)=>{
+            if(item.isDefault == true){
+              address = item
+              console.log(address)
+            }
+          })
+        }
+
+        if(addressId != 0){
+          var address = ''
+          doc.addressList.filter((item)=>{
+            if(item.addressId == addressId){
+              address = item
+              console.log(address)
+            }
+          })
+        }
+
+        var platform = '588';
+        var r1 = Math.floor(Math.random()*10)
+        var r2 = Math.floor(Math.random()*10)
+
+        var sysDate = new Date().Format('yyyyMMddhhmmss');
+        var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
+        var orderId = platform + r1 + sysDate + r2;
+
+        var order = {
+          orderId : orderId,
+          addressInfo : address,
+          goodsList : goodsList,
+          orderStatus : '1',
+          createDate : createDate
+        }
+
+        doc.orderList.push(order)
+        doc.save(function(err1,doc1){
+          if (err1) {
+            res.json({
+              status: '1',
+              msg: err1.massage,
+              result: ''
+            })
+          } else {
+            res.json({
+              status: '0',
+              msg: '',
+              result: order
+            })
+          }
+        })
+
+      }
+
+
+
+      // var address = "";
+      // //获取当前用户的地址信息
+      // doc.addressList.forEach((item)=>{
+      //   if(addressId == item.addressId){
+      //     address = item
+      //   }
+      // })
+      // var goodsList = [];
+      // doc.cartList.filter((item)=>{
+      //   if(item.checked == '1'){
+      //     goodsList.push(item)
+      //   }
+      // })
+    }
+  })
+})
+
 //个人中心   orders
 router.get("/orders",function(req,res,next){
   var userId = req.cookies.userId;
@@ -705,5 +816,6 @@ router.get("/orders",function(req,res,next){
     console.log('doc========'+doc)
   })
 })
+
 
 module.exports = router;
