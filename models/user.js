@@ -6,7 +6,35 @@ var userSchema = new mongoose.Schema({
     "phone":String,
     "eliam":String,
     "confirmPwd":String,
-    "orderList":Array,
+    "orderList":[
+        {
+            "orderId": String,
+            'addressInfo':{
+                'addressId':Number,
+                'cityName':String,
+                'userName':String,
+                'streeName':String,
+                'postCode':String,
+                'tel': Number,
+                'isDefault':Boolean
+            },
+            'goodsList':[
+                {
+                    "productId":Number,
+                    "productName":String,
+                    "salePrice":Number,
+                    "num":Number,
+                    "smImg":Array,
+                    "detailsImagebag":Array,
+                    "isMode":Boolean,
+                    "checked":String,
+                    
+                }
+            ],
+            'orderStatus': String,
+            'createDate' : String
+        }
+    ],
     "cartList":[
         {
             "details":[

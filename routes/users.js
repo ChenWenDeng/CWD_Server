@@ -789,31 +789,38 @@ router.post("/payMent",function(req,res,next){
         })
 
       }
-
-
-
-      // var address = "";
-      // //获取当前用户的地址信息
-      // doc.addressList.forEach((item)=>{
-      //   if(addressId == item.addressId){
-      //     address = item
-      //   }
-      // })
-      // var goodsList = [];
-      // doc.cartList.filter((item)=>{
-      //   if(item.checked == '1'){
-      //     goodsList.push(item)
-      //   }
-      // })
     }
   })
 })
 
-//个人中心   orders
-router.get("/orders",function(req,res,next){
+
+//个人中心  获取订单列表   orders
+router.post("/ordersList",function(req,res,next){
   var userId = req.cookies.userId;
+  var page = parseInt(req.body.page);
+  var pageSize = parseInt(req.body.pageSize);
+  let skip = (page - 1) * pageSize;  
+
+  console.log('page=='+page)
+  console.log('pageSize=='+pageSize)
+  console.log('skip=='+skip)
+
   user.findOne({userId:userId},function(err,doc){
-    console.log('doc========'+doc)
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    } else {
+      if(doc){
+        res.json({
+          status: '0',
+          msg: '',
+          result: doc.orderList
+        })
+      } 
+    }
   })
 })
 
