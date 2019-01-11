@@ -54,6 +54,9 @@ router.post("/register", function (req, res, next) {
               }
               userId++
             }
+
+            var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
+
             let object = {
               "userId":userId,
               "userName":userName,
@@ -64,7 +67,8 @@ router.post("/register", function (req, res, next) {
               "orderList":[],
               "cartList":[],
               "purchaseList":[],
-              "addressList":[]
+              "addressList":[],
+              'createDate': createDate
             }
             user.create(object)
 
@@ -717,20 +721,41 @@ router.post("/payMent",function(req,res,next){
       })
     }else{
       if(doc){
+        // if(modes=='cart'){
+        //   var goodsList = [];
+        //   doc.cartList.filter((item)=>{
+        //     if(item.details[0].checked == '1'){
+        //       goodsList.push(item.details[0])
+        //       console.log(goodsList)
+        //     }
+        //   })
+        // }
+        var totalPrice = 0; //计算本次购买商品的总金额
+
         if(modes=='cart'){
           var goodsList = [];
           doc.cartList.filter((item)=>{
-            // console.log(item.details[0].checked)
             if(item.details[0].checked == '1'){
+              //计算本次购买商品的总金额
+              totalPrice += item.details[0].salePrice * item.details[0].num
               goodsList.push(item.details[0])
               console.log(goodsList)
             }
           })
         }
 
+
+        // if(modes=='purchase'){
+        //   var goodsList = [];
+        //   //  console.log(doc.purchaseList[0].details[0])
+        //   goodsList.push(doc.purchaseList[0].details[0])
+        //    console.log(goodsList)
+        // }
+
+
         if(modes=='purchase'){
           var goodsList = [];
-          //  console.log(doc.purchaseList[0].details[0])
+          totalPrice += doc.purchaseList[0].details[0].salePrice * doc.purchaseList[0].details[0].num
           goodsList.push(doc.purchaseList[0].details[0])
            console.log(goodsList)
         }
@@ -768,7 +793,8 @@ router.post("/payMent",function(req,res,next){
           addressInfo : address,
           goodsList : goodsList,
           orderStatus : '1',
-          createDate : createDate
+          createDate : createDate,
+          totalPrice : totalPrice
         }
 
         doc.orderList.push(order)
@@ -795,15 +821,15 @@ router.post("/payMent",function(req,res,next){
 
 
 //个人中心  获取订单列表   orders
-router.post("/ordersList",function(req,res,next){
+router.get("/ordersList",function(req,res,next){
   var userId = req.cookies.userId;
-  var page = parseInt(req.body.page);
-  var pageSize = parseInt(req.body.pageSize);
-  let skip = (page - 1) * pageSize;  
+  // var page = parseInt(req.body.page);
+  // var pageSize = parseInt(req.body.pageSize);
+  // let skip = (page - 1) * pageSize;  
 
-  console.log('page=='+page)
-  console.log('pageSize=='+pageSize)
-  console.log('skip=='+skip)
+  // console.log('page=='+page)
+  // console.log('pageSize=='+pageSize)
+  // console.log('skip=='+skip)
 
   user.findOne({userId:userId},function(err,doc){
     if (err) {
@@ -818,6 +844,34 @@ router.post("/ordersList",function(req,res,next){
           status: '0',
           msg: '',
           result: doc.orderList
+        })
+      } 
+    }
+  })
+})
+
+//个人中心  获取用户个人信息   account
+router.get("/account",function(req,res,next){
+  var userId = req.cookies.userId;
+
+  user.findOne({userId:userId},function(err,doc){
+    if (err) {
+      res.json({
+        status: '1',
+        msg: err.massage,
+        result: ''
+      })
+    } else {
+      if(doc){
+        res.json({
+          status: '0',
+          msg: '',
+          result: {
+            createDate: doc.createDate,
+            userName  : doc.userName,
+            phone     : doc.phone,
+            eliam     : doc.eliam,
+          }
         })
       } 
     }

@@ -6,6 +6,7 @@ var userSchema = new mongoose.Schema({
     "phone":String,
     "eliam":String,
     "confirmPwd":String,
+    "createDate":String,
     "orderList":[
         {
             "orderId": String,
@@ -32,7 +33,8 @@ var userSchema = new mongoose.Schema({
                 }
             ],
             'orderStatus': String,
-            'createDate' : String
+            'createDate' : String,
+            'totalPrice' : Number
         }
     ],
     "cartList":[
