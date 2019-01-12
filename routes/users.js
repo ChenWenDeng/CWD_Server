@@ -721,15 +721,6 @@ router.post("/payMent",function(req,res,next){
       })
     }else{
       if(doc){
-        // if(modes=='cart'){
-        //   var goodsList = [];
-        //   doc.cartList.filter((item)=>{
-        //     if(item.details[0].checked == '1'){
-        //       goodsList.push(item.details[0])
-        //       console.log(goodsList)
-        //     }
-        //   })
-        // }
         var totalPrice = 0; //计算本次购买商品的总金额
 
         if(modes=='cart'){
@@ -743,15 +734,6 @@ router.post("/payMent",function(req,res,next){
             }
           })
         }
-
-
-        // if(modes=='purchase'){
-        //   var goodsList = [];
-        //   //  console.log(doc.purchaseList[0].details[0])
-        //   goodsList.push(doc.purchaseList[0].details[0])
-        //    console.log(goodsList)
-        // }
-
 
         if(modes=='purchase'){
           var goodsList = [];
@@ -823,13 +805,6 @@ router.post("/payMent",function(req,res,next){
 //个人中心  获取订单列表   orders
 router.get("/ordersList",function(req,res,next){
   var userId = req.cookies.userId;
-  // var page = parseInt(req.body.page);
-  // var pageSize = parseInt(req.body.pageSize);
-  // let skip = (page - 1) * pageSize;  
-
-  // console.log('page=='+page)
-  // console.log('pageSize=='+pageSize)
-  // console.log('skip=='+skip)
 
   user.findOne({userId:userId},function(err,doc){
     if (err) {
