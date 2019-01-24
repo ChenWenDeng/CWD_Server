@@ -29,6 +29,8 @@ var userSchema = new mongoose.Schema({
                     "detailsImagebag":Array,
                     "isMode":Boolean,
                     "checked":String,
+					"colours":String,
+					"sizes":String
                     
                 }
             ],
@@ -39,6 +41,7 @@ var userSchema = new mongoose.Schema({
     ],
     "cartList":[
         {
+			"cartId":String,
             "details":[
                 {
                     "productId":Number,
@@ -49,6 +52,8 @@ var userSchema = new mongoose.Schema({
                     "detailsImagebag":Array,
                     "checked":String,
                     "isMode":Boolean,
+					"colours":String,
+					"sizes":String,
                 }
             ]
         }
@@ -65,6 +70,8 @@ var userSchema = new mongoose.Schema({
                     "detailsImagebag":Array,
                     "checked":String,
                     "isMode":Boolean,
+					"colours":String,
+					"sizes":String
                 }
             ]
         }

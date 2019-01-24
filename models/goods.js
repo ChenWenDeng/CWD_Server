@@ -18,6 +18,8 @@ var productSchema = new Schema({
             "detailsImagebag":Array,
             "isMode":Boolean,
             "checked":String,
+			"colours":Array,
+			"sizes":Array
         }
     ]
 })

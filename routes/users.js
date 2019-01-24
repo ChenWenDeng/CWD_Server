@@ -4,7 +4,8 @@ var router = express.Router();
 require('./../util/util');
 
 var user = require('./../models/user');
-var Goods = require('../models/goods')
+var Goods = require('../models/goods');
+var orders = require('../models/orders');
 
 /* GET users listing. */
 router.get('/', function (req, res, next) {
@@ -206,7 +207,7 @@ router.post('/cartDel', function (req, res, next) {
   }, {
       $pull: {
         'cartList': {
-          '_id': cart_id
+          'cartId': cart_id
         }
       }
     }, function (err, doc) {
@@ -226,6 +227,7 @@ router.post('/cartDel', function (req, res, next) {
     })
 })
 
+
 //修改商品数量
 router.post("/cartEdit", function (req, res, next) {
   var userId    = req.cookies.userId;
@@ -236,7 +238,7 @@ router.post("/cartEdit", function (req, res, next) {
   console.log(productId)
   console.log(num)
   console.log(checked)
-  user.findOne({ "userId": userId, 'cartList.details.productId': productId }, function (err, doc) {
+  user.findOne({ "userId": userId, 'cartList.cartId': productId }, function (err, doc) {
     if (err) {
       res.json({
         status: '1',
@@ -245,8 +247,9 @@ router.post("/cartEdit", function (req, res, next) {
       })
     } else {
       if (doc) {
+				console.log(doc)
         doc.cartList.forEach(function (item) {
-          if (item.details[0].productId == productId) {
+          if (item.cartId == productId) {
             item.details[0].num = num
             item.details[0].checked = checked
           }
@@ -269,6 +272,53 @@ router.post("/cartEdit", function (req, res, next) {
     }
   })
 })
+
+
+
+
+//修改商品数量
+// router.post("/cartEdit", function (req, res, next) {
+//   var userId    = req.cookies.userId;
+//   var productId = req.body.productId;
+//   var num       = req.body.num;
+//   var checked   = req.body.checked;
+//   console.log(userId)
+//   console.log(productId)
+//   console.log(num)
+//   console.log(checked)
+//   user.findOne({ "userId": userId, 'cartList.details.productId': productId }, function (err, doc) {
+//     if (err) {
+//       res.json({
+//         status: '1',
+//         msg: err.massage,
+//         result: ''
+//       })
+//     } else {
+//       if (doc) {
+//         doc.cartList.forEach(function (item) {
+//           if (item.details[0].productId == productId) {
+//             item.details[0].num = num
+//             item.details[0].checked = checked
+//           }
+//         })
+//         doc.save(function (err2, doc2) {
+//           if (err2) {
+//             res.json({
+//               status: '1',
+//               msg: err2.message
+//             })
+//           } else {
+//             res.json({
+//               status: '0',
+//               msg: '',
+//               result: 'suc'
+//             })
+//           }
+//         })
+//       }
+//     }
+//   })
+// })
 
 //购物车全选接口
 router.post('/editCheckAll', function (req, res, next) {
@@ -373,6 +423,11 @@ router.post('/purchase',function(req,res,next){
   var productNum = req.body.num;
   console.log(productId)
   console.log('购买')
+	
+	var colours    = req.body.colours;
+	var sizes      = req.body.sizes;
+	console.log('colours==='+colours);
+	console.log('sizes==='+sizes);
 
   user.findOne({userId:userId},function(err,userDoc){
       if(err){
@@ -451,6 +506,8 @@ router.post('/purchase',function(req,res,next){
                     }else{
                         if(doc){
                             doc.details[0].checked = 1;
+														doc.details[0].colours = colours;
+														doc.details[0].sizes = sizes;
                             //第一次添加到购物车的数量不是1的话，改成要添加的数量
                             if(productNum != 1){
                                 doc.details[0].num = productNum
@@ -770,6 +827,7 @@ router.post("/payMent",function(req,res,next){
         var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
         var orderId = platform + r1 + sysDate + r2;
 
+				//客户端前台订单
         var order = {
           orderId : orderId,
           addressInfo : address,
@@ -778,7 +836,23 @@ router.post("/payMent",function(req,res,next){
           createDate : createDate,
           totalPrice : totalPrice
         }
+				
+				//后台管理订单
+				var orderes = {
+					orderId : orderId,
+					userName : doc.userName,
+					phone : doc.phone,
+					addressInfo : address,
+					goodsList : goodsList,
+					orderStatus : '1',
+					createDate : createDate,
+					totalPrice : totalPrice
+				}
+				
+				//后台管理订单列表插入订单
+				orders.create(orderes)
 
+				//客户端前台订单列表插入订单
         doc.orderList.push(order)
         doc.save(function(err1,doc1){
           if (err1) {
@@ -795,11 +869,107 @@ router.post("/payMent",function(req,res,next){
             })
           }
         })
-
       }
     }
   })
 })
+
+
+// //生成订单
+// router.post("/payMent",function(req,res,next){
+//   var userId = req.cookies.userId;
+//   var modes = req.body.modes;
+//   var addressId = req.body.addressId;
+//   console.log('modes==='+modes)
+//   console.log('addressId==='+addressId)
+//   user.findOne({'userId':userId},function(err,doc){
+//     if (err) {
+//       res.json({
+//         status: '1',
+//         msg: err.massage,
+//         result: ''
+//       })
+//     }else{
+//       if(doc){
+//         var totalPrice = 0; //计算本次购买商品的总金额
+// 
+//         if(modes=='cart'){
+//           var goodsList = [];
+//           doc.cartList.filter((item)=>{
+//             if(item.details[0].checked == '1'){
+//               //计算本次购买商品的总金额
+//               totalPrice += item.details[0].salePrice * item.details[0].num
+//               goodsList.push(item.details[0])
+//               console.log(goodsList)
+//             }
+//           })
+//         }
+// 
+//         if(modes=='purchase'){
+//           var goodsList = [];
+//           totalPrice += doc.purchaseList[0].details[0].salePrice * doc.purchaseList[0].details[0].num
+//           goodsList.push(doc.purchaseList[0].details[0])
+//            console.log(goodsList)
+//         }
+// 
+//         if(addressId == 0){
+//           var address = ''
+//           doc.addressList.filter((item)=>{
+//             if(item.isDefault == true){
+//               address = item
+//               console.log(address)
+//             }
+//           })
+//         }
+// 
+//         if(addressId != 0){
+//           var address = ''
+//           doc.addressList.filter((item)=>{
+//             if(item.addressId == addressId){
+//               address = item
+//               console.log(address)
+//             }
+//           })
+//         }
+// 
+//         var platform = '588';
+//         var r1 = Math.floor(Math.random()*10)
+//         var r2 = Math.floor(Math.random()*10)
+// 
+//         var sysDate = new Date().Format('yyyyMMddhhmmss');
+//         var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
+//         var orderId = platform + r1 + sysDate + r2;
+// 
+//         var order = {
+//           orderId : orderId,
+//           addressInfo : address,
+//           goodsList : goodsList,
+//           orderStatus : '1',
+//           createDate : createDate,
+//           totalPrice : totalPrice
+//         }
+// 
+//         doc.orderList.push(order)
+//         doc.save(function(err1,doc1){
+//           if (err1) {
+//             res.json({
+//               status: '1',
+//               msg: err1.massage,
+//               result: ''
+//             })
+//           } else {
+//             res.json({
+//               status: '0',
+//               msg: '',
+//               result: order
+//             })
+//           }
+//         })
+// 
+//       }
+//     }
+//   })
+// })
 
 
 //个人中心  获取订单列表   orders

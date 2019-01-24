@@ -3,6 +3,9 @@ var router = express.Router();
 var mongoose = require('mongoose');
 var Goods = require('../models/goods')
 
+require('./../util/util');
+
+
 //连接数据库
 mongoose.connect('mongodb://127.0.0.1:27017/eend');
 
@@ -222,12 +225,23 @@ router.get("/list",function(req,res,next){
     }
 })
 
+
+
+
+//加入购物车
 router.post("/addCart",function(req,res,next){
+	var userId     = req.body.userId;
     var productId  = req.body.productId;
     var productNum = req.body.num;
-    var userId     = req.body.userId;
     console.log('productNum:'+productNum);
     console.log('productId:'+productId);
+	
+	var colours    = req.body.colours;
+	var sizes      = req.body.sizes;
+	console.log('colours==='+colours);
+	console.log('sizes==='+sizes);
+	
+	
     // var UserId = 100001;
     var User = require('../models/user');
 
@@ -242,7 +256,7 @@ router.post("/addCart",function(req,res,next){
             if(userDoc){
                 let goodsItem = '';
                 userDoc.cartList.forEach(function(item){
-                    if(item.details[0].productId  == productId){
+                    if((item.details[0].productId  == productId) && (item.details[0].colours == colours) && (item.details[0].sizes == sizes)){
                         goodsItem = item;
                         if(productNum==1){
                             item.details[0].num++;
@@ -283,13 +297,31 @@ router.post("/addCart",function(req,res,next){
                             })
                         }else{
                             if(doc){
+								var platform = '588';
+								var r1 = Math.floor(Math.random()*10)
+								var r2 = Math.floor(Math.random()*10)
+								
+								var sysDate = new Date().Format('yyyyMMddhhmmss');
+								// var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
+								var cartId = platform + r1 + sysDate + r2;
+								
+								
                                 doc.details[0].checked = 1;
+								doc.details[0].colours = colours;
+								doc.details[0].sizes = sizes;
                                 //第一次添加到购物车的数量不是1的话，改成要添加的数量
                                 if(productNum != 1){
                                     doc.details[0].num = productNum
                                 }
                                 console.log('doc======'+doc)
                                 userDoc.cartList.push(doc);
+								
+								for(var i=0;i<userDoc.cartList.length;i++){
+									if(i == userDoc.cartList.length-1){
+										userDoc.cartList[i].cartId = cartId;
+									}
+								}
+								
                                 userDoc.save(function(err2,doc2){
                                     if(err2){
                                         res.json({
@@ -316,5 +348,106 @@ router.post("/addCart",function(req,res,next){
         }
     })
 })
+
+
+
+
+
+
+// //加入购物车
+// router.post("/addCart",function(req,res,next){
+//     var productId  = req.body.productId;
+//     var productNum = req.body.num;
+//     var userId     = req.body.userId;
+//     console.log('productNum:'+productNum);
+//     console.log('productId:'+productId);
+//     // var UserId = 100001;
+//     var User = require('../models/user');
+// 
+//     User.findOne({userId:userId},function(err,userDoc){
+//         if(err){
+//             res.json({
+//                 status:'1',
+//                 msg:err.message
+//             })
+//         }else{
+//             console.log('userDoc:'+userDoc);
+//             if(userDoc){
+//                 let goodsItem = '';
+//                 userDoc.cartList.forEach(function(item){
+//                     if(item.details[0].productId  == productId){
+//                         goodsItem = item;
+//                         if(productNum==1){
+//                             item.details[0].num++;
+//                         }else{
+//                             item.details[0].num += productNum
+//                         }
+//                         console.log('item==========='+item)
+//                     }
+//                     console.log('itemssss==========='+item.details[0].num)
+//                 })
+//                 if(goodsItem){
+//                     userDoc.save(function(err2,doc2){
+//                         if(err2){
+//                             res.json({
+//                                 status:'1',
+//                                 msg:err2.message
+//                             })
+//                         }else{
+//                             res.json({
+//                                 status: '0',
+//                                 msg: '',
+//                                 result:{
+//                                     count:doc2.length,
+//                                     list:doc2
+//                                 }
+//                             })
+//                         } 
+//                     })
+//                 }else{
+//                     Goods.findOne(
+//                         {
+//                             "details.productId":productId
+//                         },function(err1,doc){
+//                         if(err1){
+//                             res.json({
+//                                 status:'1',
+//                                 msg:err1.message
+//                             })
+//                         }else{
+//                             if(doc){
+//                                 doc.details[0].checked = 1;
+//                                 //第一次添加到购物车的数量不是1的话，改成要添加的数量
+//                                 if(productNum != 1){
+//                                     doc.details[0].num = productNum
+//                                 }
+//                                 console.log('doc======'+doc)
+//                                 userDoc.cartList.push(doc);
+//                                 userDoc.save(function(err2,doc2){
+//                                     if(err2){
+//                                         res.json({
+//                                             status:'1',
+//                                             msg:err2.message
+//                                         })
+//                                     }else{
+//                                         res.json({
+//                                             status: '0',
+//                                             msg: '',
+//                                             result:{
+//                                                 count:doc2.length,
+//                                                 list:doc2,
+//                                                 _id:doc._id
+//                                             }
+//                                         })
+//                                     } 
+//                                 })
+//                             }
+//                         }
+//                     })
+//                 }
+//             }
+//         }
+//     })
+// })
 
 module.exports = router;
