@@ -12,6 +12,7 @@ router.get('/', function (req, res, next) {
   res.send('respond with a resource');
 });
 
+
 //注册接口
 router.post("/register", function (req, res, next) {
   var userName   = req.body.userName;
@@ -44,17 +45,13 @@ router.post("/register", function (req, res, next) {
         user.find({},function(err2,userDoc){
           if(userDoc){
             console.log('进入===='+userDoc.length)
-            if(userDoc.length == 0){
-              var userId = 100001
-            }else{
-              for(var i=0;i<userDoc.length;i++){
-                if(i == userDoc.length-1){
-                  var userId = userDoc[i].userId
-                  console.log('www'+userDoc[i].userId);
-                }
-              }
-              userId++
-            }
+
+						var platform = '588';
+						var r1 = Math.floor(Math.random()*10)
+						var r2 = Math.floor(Math.random()*10)
+						
+						var sysDate = new Date().Format('yyyyMMddhhmmss');
+						var userId = platform + r1 + sysDate + r2;
 
             var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
 
@@ -84,7 +81,6 @@ router.post("/register", function (req, res, next) {
     }
   })
 })
-
 
 //登录接口
 router.post("/login", function (req, res, next) {
@@ -272,53 +268,6 @@ router.post("/cartEdit", function (req, res, next) {
     }
   })
 })
-
-
-
-
-//修改商品数量
-// router.post("/cartEdit", function (req, res, next) {
-//   var userId    = req.cookies.userId;
-//   var productId = req.body.productId;
-//   var num       = req.body.num;
-//   var checked   = req.body.checked;
-//   console.log(userId)
-//   console.log(productId)
-//   console.log(num)
-//   console.log(checked)
-//   user.findOne({ "userId": userId, 'cartList.details.productId': productId }, function (err, doc) {
-//     if (err) {
-//       res.json({
-//         status: '1',
-//         msg: err.massage,
-//         result: ''
-//       })
-//     } else {
-//       if (doc) {
-//         doc.cartList.forEach(function (item) {
-//           if (item.details[0].productId == productId) {
-//             item.details[0].num = num
-//             item.details[0].checked = checked
-//           }
-//         })
-//         doc.save(function (err2, doc2) {
-//           if (err2) {
-//             res.json({
-//               status: '1',
-//               msg: err2.message
-//             })
-//           } else {
-//             res.json({
-//               status: '0',
-//               msg: '',
-//               result: 'suc'
-//             })
-//           }
-//         })
-//       }
-//     }
-//   })
-// })
 
 //购物车全选接口
 router.post('/editCheckAll', function (req, res, next) {
@@ -874,104 +823,6 @@ router.post("/payMent",function(req,res,next){
   })
 })
 
-
-// //生成订单
-// router.post("/payMent",function(req,res,next){
-//   var userId = req.cookies.userId;
-//   var modes = req.body.modes;
-//   var addressId = req.body.addressId;
-//   console.log('modes==='+modes)
-//   console.log('addressId==='+addressId)
-//   user.findOne({'userId':userId},function(err,doc){
-//     if (err) {
-//       res.json({
-//         status: '1',
-//         msg: err.massage,
-//         result: ''
-//       })
-//     }else{
-//       if(doc){
-//         var totalPrice = 0; //计算本次购买商品的总金额
-// 
-//         if(modes=='cart'){
-//           var goodsList = [];
-//           doc.cartList.filter((item)=>{
-//             if(item.details[0].checked == '1'){
-//               //计算本次购买商品的总金额
-//               totalPrice += item.details[0].salePrice * item.details[0].num
-//               goodsList.push(item.details[0])
-//               console.log(goodsList)
-//             }
-//           })
-//         }
-// 
-//         if(modes=='purchase'){
-//           var goodsList = [];
-//           totalPrice += doc.purchaseList[0].details[0].salePrice * doc.purchaseList[0].details[0].num
-//           goodsList.push(doc.purchaseList[0].details[0])
-//            console.log(goodsList)
-//         }
-// 
-//         if(addressId == 0){
-//           var address = ''
-//           doc.addressList.filter((item)=>{
-//             if(item.isDefault == true){
-//               address = item
-//               console.log(address)
-//             }
-//           })
-//         }
-// 
-//         if(addressId != 0){
-//           var address = ''
-//           doc.addressList.filter((item)=>{
-//             if(item.addressId == addressId){
-//               address = item
-//               console.log(address)
-//             }
-//           })
-//         }
-// 
-//         var platform = '588';
-//         var r1 = Math.floor(Math.random()*10)
-//         var r2 = Math.floor(Math.random()*10)
-// 
-//         var sysDate = new Date().Format('yyyyMMddhhmmss');
-//         var createDate = new Date().Format('yyyy-MM-dd hh:mm:ss');
-//         var orderId = platform + r1 + sysDate + r2;
-// 
-//         var order = {
-//           orderId : orderId,
-//           addressInfo : address,
-//           goodsList : goodsList,
-//           orderStatus : '1',
-//           createDate : createDate,
-//           totalPrice : totalPrice
-//         }
-// 
-//         doc.orderList.push(order)
-//         doc.save(function(err1,doc1){
-//           if (err1) {
-//             res.json({
-//               status: '1',
-//               msg: err1.massage,
-//               result: ''
-//             })
-//           } else {
-//             res.json({
-//               status: '0',
-//               msg: '',
-//               result: order
-//             })
-//           }
-//         })
-// 
-//       }
-//     }
-//   })
-// })
-
-
 //个人中心  获取订单列表   orders
 router.get("/ordersList",function(req,res,next){
   var userId = req.cookies.userId;
@@ -992,6 +843,36 @@ router.get("/ordersList",function(req,res,next){
         })
       } 
     }
+  })
+})
+
+//个人中心  删除对应订单
+router.post("/delOrder",function(req,res,next){
+  var userId = req.cookies.userId;
+	var orderId = req.body.orderId;
+
+  user.update({
+  	'userId': userId
+  }, {
+  	$pull: {
+  		'orderList': {
+  			'orderId': orderId
+  		}
+  	}
+  }, function (err, doc) {
+  	if (err) {
+  		res.json({
+  			status: '1',
+  			msg: err.massage,
+  			result: ''
+  		})
+  	} else {
+  		res.json({
+  			status: '0',
+  			msg: '',
+  			result: 'suc'
+  		})
+  	}
   })
 })
 
